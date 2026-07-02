@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ข้อสอบ</title>
+<style>
+  :root{
+    --ink:#1c2b26; --ink-soft:#4a5d55; --paper:#f7f7f3; --card:#ffffff;
+    --line:#dfe3da; --pri:#0f4c46; --pri-soft:#e3efec; --warn:#92400e;
+    --warn-bg:#fef3e2; --danger:#b91c1c; --danger-bg:#fdecec; --ok:#166534;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Leelawadee UI','Segoe UI',Tahoma,'Noto Sans Thai',sans-serif;
+       background:var(--paper); color:var(--ink); font-size:17px; line-height:1.65;}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 20px 80px}
+  h1{font-size:1.35rem;margin:.2rem 0}
+  h2{font-size:1.1rem;margin:1.6rem 0 .6rem;color:var(--pri)}
+  .muted{color:var(--ink-soft)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:14px 0}
+  .center{text-align:center}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--pri);
+         background:var(--pri);color:#fff;padding:11px 26px;font-size:1.02rem}
+  button.ghost{background:#fff;color:var(--pri)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button:focus-visible,input:focus-visible{outline:3px solid #7fb5ad;outline-offset:2px}
+  input[type=text],input[type=tel]{font:inherit;border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+  /* ช่องเลขเครื่อง — ตัวใหญ่พิเศษ */
+  .machine-input{font-size:3.2rem;text-align:center;letter-spacing:.15em;max-width:280px;
+                 padding:14px 10px;border:2px solid var(--pri);border-radius:14px;font-variant-numeric:tabular-nums}
+  .badge{display:inline-block;background:var(--pri-soft);color:var(--pri);border-radius:999px;
+         padding:2px 14px;font-size:.85rem;font-weight:600}
+  .rulebox{border:2px solid var(--danger);background:var(--danger-bg);border-radius:12px;padding:18px 22px;margin:16px 0}
+  .rulebox h3{margin:.1rem 0 .5rem;color:var(--danger);font-size:1.15rem}
+  .rulebox ul{margin:.4rem 0 .2rem;padding-left:1.3rem}
+  .noai{font-size:1.25rem;font-weight:700;color:var(--danger)}
+  /* แถบบนตอนทำข้อสอบ */
+  .topbar{position:sticky;top:0;z-index:20;background:var(--pri);color:#fff;
+          display:flex;align-items:center;gap:14px;padding:10px 18px;flex-wrap:wrap}
+  .topbar .timer{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;
+                 background:rgba(255,255,255,.14);border-radius:8px;padding:2px 14px}
+  .topbar .timer.low{background:#7f1d1d}
+  .topbar .who{font-size:.92rem;opacity:.95}
+  .topbar .prog{margin-left:auto;font-size:.92rem}
+  .q{border-top:1px solid var(--line);padding:16px 2px 6px;margin-top:8px}
+  .q .qt{font-weight:600}
+  .choice{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:8px;cursor:pointer}
+  .choice:hover{background:var(--pri-soft)}
+  .choice input{margin-top:6px;width:18px;height:18px;accent-color:var(--pri)}
+  .ansline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+  .ansline input{max-width:230px;font-variant-numeric:tabular-nums}
+  .ansline .done{color:var(--ok);font-weight:700;visibility:hidden}
+  .ansline .done.show{visibility:visible}
+  .stepbox{background:var(--pri-soft);border-radius:10px;padding:14px 18px}
+  .stepbox ol{margin:.3rem 0;padding-left:1.35rem}
+  .warnbox{background:var(--warn-bg);border:1px solid #f2d9ad;border-radius:10px;padding:12px 16px;color:var(--warn)}
+  .bigcode{font-size:2.6rem;font-weight:800;letter-spacing:.2em;color:var(--pri);font-variant-numeric:tabular-nums}
+  .hidden{display:none!important}
+  label.agree{display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer}
+  label.agree input{width:20px;height:20px;margin-top:4px;accent-color:var(--danger)}
+  .fieldnote{font-size:.88rem;color:var(--ink-soft)}
+  .modal{position:fixed;inset:0;background:rgba(20,30,26,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal-box{background:#fff;border-radius:14px;padding:24px 26px;max-width:440px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .modal-box p{white-space:pre-line;font-size:1.05rem;margin:.2rem 0 1.1rem}
+  .modal-box .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .banner{background:var(--pri-soft);border:1px solid #bcd8d2;color:var(--pri);border-radius:10px;padding:10px 16px;margin:0 0 12px;font-weight:600}
+  .errmsg{color:var(--danger);font-weight:600;min-height:1.4em;margin-top:8px}
+  table.info{border-collapse:collapse;margin:8px 0}
+  table.info td{padding:3px 14px 3px 0;vertical-align:top}
+  table.info td:first-child{color:var(--ink-soft);white-space:nowrap}
+  @media (max-width:560px){ .machine-input{font-size:2.4rem} .wrap{padding:14px 12px 70px} }
+  @media (prefers-reduced-motion:no-preference){ .card{transition:opacity .2s} }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ จอ 1 · ระบุเลขเครื่อง ═══════════ -->
+<div id="scrEntry" class="wrap">
+  <div class="center" style="margin-top:5vh">
+    <span class="badge" id="hdCourse1"></span>
+    <h1 id="hdQuiz1" style="margin-top:10px"></h1>
+    <p class="muted" id="hdMeta1"></p>
+  </div>
+  <div class="card center" style="max-width:520px;margin:22px auto">
+    <p style="font-size:1.15rem;font-weight:600;margin:.4rem 0 1rem">พิมพ์<u>เลขเครื่อง</u>ที่ติดอยู่บนคอมพิวเตอร์ของคุณ</p>
+    <input id="inMachine" class="machine-input" type="tel" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="เลขเครื่อง">
+    <div class="errmsg" id="entryErr" role="alert"></div>
+    <button id="btnMachine" style="margin-top:6px">ยืนยันเลขเครื่อง</button>
+  </div>
+</div>
+
+<!-- ═══════════ จอ 2 · ยืนยันตัวตน ═══════════ -->
+<div id="scrIdentity" class="wrap hidden">
+  <div class="card center" style="max-width:560px;margin:8vh auto">
+    <p class="muted" style="margin:0">เครื่องหมายเลข <b id="idMachineNo" style="font-size:1.4rem;color:var(--pri)"></b> · เลขที่นั่ง <b id="idSeatNo"></b></p>
+    <h1 id="idName" style="font-size:1.6rem;margin:.6rem 0 .1rem"></h1>
+    <p class="muted" id="idSid" style="font-size:1.05rem"></p>
+    <p style="font-weight:600">ใช่คุณหรือไม่?</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button id="btnMe">ใช่ นี่คือฉัน</button>
+      <button id="btnNotMe" class="ghost">ไม่ใช่ กลับไปแก้เลขเครื่อง</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ จอ 3 · กติกาการสอบ ═══════════ -->
+<div id="scrRules" class="wrap hidden">
+  <div class="center">
+    <span class="badge" id="hdCourse2"></span>
+    <h1 id="hdQuiz2" style="margin-top:8px"></h1>
+    <p class="muted" id="ruleWho"></p>
+  </div>
+
+  <div class="rulebox" role="region" aria-label="ข้อห้ามสำคัญ">
+    <h3>⛔ ข้อห้ามสำคัญ — อ่านก่อนเริ่ม</h3>
+    <p class="noai">ห้ามใช้เครื่องมือ AI ทุกชนิดตลอดการสอบ<br>(ChatGPT, Claude, Copilot, Gemini หรืออื่นใด)</p>
+    <ul>
+      <li>ห้ามปรึกษา ห้ามดูหน้าจอผู้อื่น และห้ามส่งคำตอบให้กัน</li>
+      <li><b>ไฟล์ข้อสอบของทุกคนไม่เหมือนกัน</b> — ตัวเลขและเฉลยต่างกันทุกคน คำตอบของเพื่อนคือคำตอบที่ผิดของคุณ และระบบมีข้อกับดักที่ระบุได้ว่าใครลอกใคร</li>
+      <li>ระบบบันทึกทุกครั้งที่ออกจากหน้าจอข้อสอบไปเปิดหน้าต่างอื่น</li>
+      <li>ผู้ฝ่าฝืนได้ <b>0 คะแนน</b> ในควิซนี้ และถูกบันทึกประกอบการพิจารณาคะแนนจิตพิสัย</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">กติกาการสอบ</h2>
+    <ul style="margin:.2rem 0;padding-left:1.3rem">
+      <li>งานเดี่ยว ทำด้วยตนเองในคาบเรียนเท่านั้น · เวลา <b id="ruleDur"></b> นาที ระบบส่งให้อัตโนมัติเมื่อหมดเวลา</li>
+      <li id="ruleAllowedLi">อนุญาตให้เปิดเฉพาะ: <span id="ruleAllowed"></span></li>
+      <li>ควิซนี้วัดทักษะเดียวกับข้อสอบกลางภาค — การใช้ AI หรือลอกเพื่อนคือการปิดโอกาสฝึกของตนเอง</li>
+      <li>เมื่อกดส่ง ระบบจะดาวน์โหลด<b>ไฟล์คำตอบ</b>ให้ 1 ไฟล์ ให้อัปโหลดไฟล์นั้นเข้า LMS ทันที แล้วจดรหัสยืนยัน 6 หลักที่ปรากฏบนจอ</li>
+    </ul>
+    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+    <label class="agree">
+      <input type="checkbox" id="chkAgree">
+      <span>ข้าพเจ้าอ่านและยอมรับกติกาทั้งหมดแล้ว จะทำข้อสอบด้วยตนเองโดยไม่ใช้ AI และไม่ลอกผู้อื่น</span>
+    </label>
+    <div class="center" style="margin-top:18px">
+      <button id="btnStart" disabled>เริ่มทำข้อสอบ — เวลาเริ่มนับทันที</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ จอ 4 · ทำข้อสอบ ═══════════ -->
+<div id="scrExam" class="hidden">
+  <div class="topbar">
+    <div class="timer" id="tmr" aria-live="polite">--:--</div>
+    <div class="who" id="examWho"></div>
+    <div class="prog" id="prog"></div>
+  </div>
+  <div class="wrap">
+    <div class="banner hidden" id="resumeNote">ระบบกู้คำตอบที่ทำค้างไว้ให้แล้ว เวลานับต่อจากเดิม</div>
+    <div class="card" id="theoryCard">
+      <h2 style="margin-top:0" id="theoryHead"></h2>
+      <p class="muted" style="margin:.1rem 0">เลือกคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว</p>
+      <div id="theoryList"></div>
+    </div>
+
+    <div class="card" id="practicalCard">
+      <h2 style="margin-top:0" id="practHead"></h2>
+      <p id="practIntro" style="margin:.2rem 0 .8rem"></p>
+      <div class="stepbox">
+        <b>ขั้นตอนการทำ (ทำตามลำดับ)</b>
+        <ol id="practSteps"></ol>
+      </div>
+      <div class="center" style="margin:16px 0">
+        <button id="btnCsv" class="ghost" style="font-size:1.1rem">⬇ ดาวน์โหลดไฟล์ข้อมูลของฉัน</button>
+        <div class="fieldnote" id="csvNote"></div>
+      </div>
+      <div id="practList"></div>
+    </div>
+
+    <div class="card center">
+      <p class="muted" id="sumState" style="margin:.2rem 0 .8rem"></p>
+      <button id="btnSubmit" style="font-size:1.15rem;padding:14px 40px">ส่งข้อสอบ</button>
+      <p class="fieldnote">กดส่งแล้วแก้ไขไม่ได้ · ระบบจะดาวน์โหลดไฟล์คำตอบและแสดงรหัสยืนยัน</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ จอ 5 · ส่งเรียบร้อย ═══════════ -->
+<div id="scrDone" class="wrap hidden">
+  <div class="card center" style="max-width:600px;margin:6vh auto">
+    <div style="font-size:3rem">✅</div>
+    <h1 style="color:var(--ok)">ส่งข้อสอบเรียบร้อย</h1>
+    <p id="doneWho" class="muted"></p>
+    <p style="margin:.4rem 0 0">รหัสยืนยันการส่งของคุณ</p>
+    <div class="bigcode" id="doneCode"></div>
+    <div class="warnbox" style="text-align:left;margin:16px 0">
+      <b>ทำต่ออีก 2 ขั้น:</b>
+      <ol style="margin:.3rem 0;padding-left:1.3rem">
+        <li>ไฟล์คำตอบ <b id="doneFile"></b> ถูกดาวน์โหลดแล้ว → <b>อัปโหลดเข้า LMS ทันที</b> (พร้อมไฟล์ CSV และภาพหน้าจอ)</li>
+        <li>จดรหัสยืนยัน 6 หลักไว้ หากอัปโหลดมีปัญหาให้แจ้งอาจารย์พร้อมรหัสนี้</li>
+      </ol>
+    </div>
+    <button id="btnRedownload" class="ghost">ดาวน์โหลดไฟล์คำตอบอีกครั้ง</button>
+    <div class="errmsg" id="doneErr" role="alert"></div>
+    <details style="margin-top:10px;text-align:left">
+      <summary class="fieldnote" style="cursor:pointer">ดาวน์โหลดไม่ได้? เปิดดูเนื้อหาไฟล์เพื่อคัดลอก</summary>
+      <textarea id="rawOut" readonly style="width:100%;min-height:120px;font-family:monospace;font-size:.78rem;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:8px"></textarea>
+      <p class="fieldnote">คัดลอกทั้งหมดไปวางใน Notepad แล้วบันทึกเป็นชื่อไฟล์ตามที่แสดงด้านบน (นามสกุล .json) ก่อนอัปโหลดเข้า LMS</p>
+    </details>
+  </div>
+</div>
+
+<!-- กล่องยืนยันส่ง (สร้างเอง ไม่พึ่ง confirm ของเบราว์เซอร์) -->
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalMsg">
+  <div class="modal-box">
+    <p id="modalMsg"></p>
+    <div class="btns">
+      <button id="modalYes">ยืนยันส่งข้อสอบ</button>
+      <button id="modalNo" class="ghost">กลับไปทำต่อ</button>
+    </div>
+  </div>
+</div>
+
+<script>/* ============================================================
+   quizcore.js — แกนกลางระบบสอบ (ใช้ร่วมกัน exam / grader)
+   ชุดภาคปฏิบัติ 4 ชุด (Quiz #1–#4) ข้อมูลคนละชุด seed จากรหัสนักศึกษา
+   หมายเหตุ: ไฟล์นี้ไม่มีการคำนวณเฉลย — เฉลยคำนวณใน gradercore (ฝั่งอาจารย์)
+   ============================================================ */
+"use strict";
+
+/* ---------- PRNG + เครื่องมือสุ่มแบบกำหนดผลได้ ---------- */
+function seedFromId(sid) {
+  let v = 0;
+  for (let i = 0; i < sid.length; i++) v = (v * 131 + sid.charCodeAt(i)) % 2147483648;
+  return v >>> 0;
+}
+function makeRng(seed) {
+  let a = (seed >>> 0) || 1;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function randint(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function choice(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+function sample(rng, arr, k) {
+  const pool = arr.slice(); const out = [];
+  for (let i = 0; i < k; i++) { const j = Math.floor(rng() * pool.length); out.push(pool[j]); pool.splice(j, 1); }
+  return out;
+}
+function shuffleInPlace(rng, arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+function round1(x){ return Math.round(x * 10) / 10; }
+
+/* ---------- ชื่อคนไทย (ใช้ร่วม) ---------- */
+const TH_FIRST = ["สมชาย","สมหญิง","วิชัย","มาลี","ประยุทธ์","อรทัย","ธนพล","ศิริพร",
+  "กิตติ","นภา","อนันต์","จิราพร","สุรชัย","พรทิพย์","ณัฐพล","วราภรณ์",
+  "เอกชัย","สุนีย์","ภาณุ","รัตนา","ชูชาติ","อัมพร","ไพโรจน์","ดวงใจ"];
+const TH_LAST = ["ใจดี","รักเรียน","ทองแท้","ศรีสุข","บุญมา","แก้วใส","พูนสุข","มั่นคง",
+  "เจริญพร","สุขสันต์","วงศ์ทอง","ตั้งใจ","แสงทอง","อยู่เย็น","คงคา","นาคทอง"];
+function thName(rng){ return choice(rng, TH_FIRST) + " " + choice(rng, TH_LAST); }
+
+/* ============================================================
+   ชุดที่ 1 — Quiz #1 · การเตรียมข้อมูล (สป.1–3)
+   บริบท: สมาชิกศูนย์ดูแลผู้สูงอายุ (ไม่ซ้ำตัวอย่างในบทเรียน)
+   ============================================================ */
+const Q1_PROV = ["เชียงใหม่","ขอนแก่น","ชลบุรี","สุพรรณบุรี","นครปฐม","สงขลา","ระยอง","อุดรธานี","พิษณุโลก","กาญจนบุรี"];
+const Q1_AYU = ["พระนครศรีอยุธยา","อยุธยา","อยุธยาฯ"];   // สะกด 3 แบบ ต้องรวมเป็นแบบเดียว
+
+function q1_make(sid) {
+  const rng = makeRng(seedFromId("Q1|" + sid));
+  const nBase = randint(rng, 150, 185);
+  const nMissing = randint(rng, 10, 16);
+  const nOut = randint(rng, 2, 4);          // อายุ = 555 (ค่าผิดปกติ)
+  const nDup = randint(rng, 8, 14);
+  const nComma = randint(rng, 20, 30);
+
+  const rows = [];
+  for (let i = 0; i < nBase; i++) {
+    const mid = "M" + String(i + 101).padStart(3, "0");
+    const age = randint(rng, 60, 95);
+    const prov = rng() < 0.30 ? choice(rng, Q1_AYU) : choice(rng, Q1_PROV);
+    const fee = randint(rng, 60, 350) * 100;          // ค่าบริการ 6,000–35,000
+    const paid = randint(rng, 10, 600) * 100;         // ยอดชำระสะสม
+    const renew = rng() < 0.7 ? "Yes" : "No";
+    rows.push([mid, thName(rng), age, prov, fee, paid, renew]);
+  }
+  // แถวกับดัก (canary) — ยอดชำระสะสมหลักแสน ไม่ลงร้อยพอดี → ไม่ซ้ำกันระหว่างคน
+  const canaryId = "M" + randint(rng, 901, 999);
+  let canaryPaid = randint(rng, 100001, 999999);
+  while (canaryPaid % 100 === 0) canaryPaid = randint(rng, 100001, 999999);
+  rows.push([canaryId, thName(rng), randint(rng, 62, 90), choice(rng, Q1_PROV),
+             randint(rng, 60, 350) * 100, canaryPaid, "Yes"]);
+
+  const normalIdx = Array.from({ length: nBase }, (_, i) => i);
+  for (const idx of sample(rng, normalIdx, nOut)) rows[idx][2] = 555;
+  for (const idx of sample(rng, normalIdx, nMissing)) rows[idx][4] = "";
+  for (const idx of sample(rng, normalIdx, nDup)) rows.push(rows[idx].slice());
+  shuffleInPlace(rng, rows);
+  for (const i of sample(rng, Array.from({ length: rows.length }, (_, x) => x), Math.min(nComma, rows.length))) {
+    const v = rows[i][5];
+    if (typeof v === "number" && v >= 1000) rows[i][5] = v.toLocaleString("en-US");
+  }
+  for (const r of rows) if (r[0] === canaryId && typeof r[5] === "number") r[5] = r[5].toLocaleString("en-US");
+  return rows;
+}
+
+/* ============================================================
+   ชุดที่ 2 — Quiz #2 · อัลกอริทึมจำแนกประเภท (สป.4–7)
+   บริบท: สินเชื่อ ทำนาย "ผิดนัดชำระ" + โมเดล A/B + กติกาต้นไม้ + Perceptron
+   ============================================================ */
+function q2_make(sid) {
+  const rng = makeRng(seedFromId("Q2|" + sid));
+  const n = randint(rng, 140, 170);
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const lid = "L" + String(i + 101).padStart(3, "0");
+    const age = randint(rng, 21, 65);
+    const income = randint(rng, 90, 800) * 100;       // 9,000–80,000
+    const loan = randint(rng, 20, 500) * 1000;        // วงเงิน 20,000–500,000
+    const late = randint(rng, 0, 9);                  // งวดค้างจ่ายปีที่แล้ว
+    let p = 0.10 + (late >= 4 ? 0.45 : late * 0.05) + (income < 25000 ? 0.15 : 0);
+    const actual = rng() < p ? "Yes" : "No";
+    const predA = rng() < 0.82 ? actual : (actual === "Yes" ? "No" : "Yes");
+    const predB = rng() < 0.73 ? actual : (actual === "Yes" ? "No" : "Yes");
+    rows.push([lid, age, income, loan, late, actual, predA, predB]);
+  }
+  // canary: วงเงินกู้ไม่ลงหลักพันพอดี (คะแนนความเสี่ยงจึงไม่ซ้ำใคร)
+  const canaryId = "L9" + String(randint(rng, 1, 99)).padStart(2, "0");
+  let cLoan = randint(rng, 20000, 500000);
+  while (cLoan % 1000 === 0) cLoan = randint(rng, 20000, 500000);
+  rows.push([canaryId, randint(rng, 25, 60), randint(rng, 90, 800) * 100, cLoan,
+             randint(rng, 0, 9), "No", "No", "Yes"]);
+  shuffleInPlace(rng, rows);
+  return rows;
+}
+
+/* ============================================================
+   ชุดที่ 3 — Quiz #3 · GA + Deep Learning (สป.10–11)
+   บริบท: ตารางผลการทดลองปรับพารามิเตอร์โมเดลจำแนกภาพสินค้า 10 รุ่นแบบ GA
+   ============================================================ */
+function q3_make(sid) {
+  const rng = makeRng(seedFromId("Q3|" + sid));
+  const perGen = randint(rng, 10, 13);
+  const rows = [];
+  let no = 1;
+  for (let g = 1; g <= 10; g++) {
+    for (let i = 0; i < perGen; i++) {
+      const eid = "E" + String(no++).padStart(3, "0");
+      const hidden = choice(rng, [4, 8, 12, 16, 24, 32, 48, 64]);
+      const lr = choice(rng, [0.001, 0.005, 0.01, 0.05, 0.1]);
+      const acc = round1(Math.min(99, Math.max(40, 58 + g * 3.0 + (rng() * 14 - 7))));
+      const time = randint(rng, 20, 300);
+      rows.push([eid, g, hidden, lr, acc, time]);
+    }
+  }
+  // canary: Accuracy ทศนิยม 2 ตำแหน่ง + เวลาเทรนสูง → fitness ต่ำ ไม่ชนกับข้อ 4
+  const canaryId = "E9" + String(randint(rng, 1, 99)).padStart(2, "0");
+  const cAcc = Math.round((60 + rng() * 15) * 100) / 100;
+  rows.push([canaryId, randint(rng, 2, 9), choice(rng, [8, 16, 32]),
+             choice(rng, [0.005, 0.01, 0.05]), cAcc, randint(rng, 400, 900)]);
+  shuffleInPlace(rng, rows);
+  return rows;
+}
+
+/* ============================================================
+   ชุดที่ 4 — Quiz #4 · การนำ AI ไปใช้ในธุรกิจ (สป.12–15)
+   บริบท: ผลทดสอบ Usability (SUS) แอปดูแลผู้สูงอายุ กับผู้สูงอายุ/ผู้ดูแล
+   ============================================================ */
+function q4_make(sid) {
+  const rng = makeRng(seedFromId("Q4|" + sid));
+  const n = randint(rng, 26, 34);
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const uid = "U" + String(i + 1).padStart(2, "0");
+    const elder = rng() < 0.55;
+    const group = elder ? "ผู้สูงอายุ" : "ผู้ดูแล";
+    const age = elder ? randint(rng, 60, 88) : randint(rng, 24, 58);
+    const good = 0.35 + rng() * 0.45;                 // ระดับความพึงพอใจของคนนี้
+    const qs = [];
+    for (let q = 1; q <= 10; q++) {
+      const odd = q % 2 === 1;                        // ข้อคี่ = เชิงบวก
+      let v = odd ? 2 + Math.round(good * 3 + rng() * 1.4 - 0.7)
+                  : 4 - Math.round(good * 3 + rng() * 1.4 - 0.7);
+      qs.push(Math.min(5, Math.max(1, v)));
+    }
+    const time = Math.round((elder ? 90 + rng() * 420 : 45 + rng() * 240) * 10) / 10;
+    rows.push([uid, group, age, ...qs, time]);
+  }
+  // canary: เวลาทำภารกิจทศนิยม 1 ตำแหน่ง ช่วงสูง ไม่ซ้ำใคร
+  const canaryId = "U9" + randint(rng, 1, 9);
+  const cQs = []; for (let q = 0; q < 10; q++) cQs.push(randint(rng, 1, 5));
+  const cTime = Math.round((400 + rng() * 550) * 10) / 10;
+  rows.push([canaryId, choice(rng, ["ผู้สูงอายุ", "ผู้ดูแล"]), randint(rng, 30, 80), ...cQs, cTime]);
+  shuffleInPlace(rng, rows);
+  return rows;
+}
+
+/* ============================================================
+   นิยามชุดภาคปฏิบัติ (คำถาม + ขั้นตอน + ตัวสร้างข้อมูล)
+   ============================================================ */
+const QSETS = {
+  q1: {
+    name: "Quiz #1 — การเตรียมข้อมูล (สป.1–3)",
+    count: 8,
+    header: ["รหัสสมาชิก","ชื่อ-นามสกุล","อายุ","จังหวัด","ค่าบริการต่อเดือน","ยอดชำระสะสม","ต่ออายุสมาชิก"],
+    intro: "ศูนย์ดูแลผู้สูงอายุแห่งหนึ่งส่งไฟล์ข้อมูลสมาชิกที่ยัง “สกปรก” มาให้คุณเตรียมก่อนนำไปสร้างโมเดลทำนายการต่ออายุสมาชิก",
+    make: q1_make,
+    questions: [
+      "ไฟล์ดิบมีข้อมูลทั้งหมดกี่แถว (ไม่รวมหัวตาราง)",
+      "มีแถวที่ “รหัสสมาชิก” ซ้ำ ซึ่งต้องลบออกกี่แถว (เก็บแถวบนสุดของแต่ละรหัสไว้)",
+      "ในไฟล์ดิบ คอลัมน์ “ค่าบริการต่อเดือน” มีค่าว่างกี่ช่อง",
+      "ในไฟล์ดิบ มีแถวที่ “อายุ” = 555 (ค่าผิดปกติ) กี่แถว",
+      "ในไฟล์ดิบ มีแถวที่ “จังหวัด” สะกดว่า “อยุธยา” พอดี (แบบสั้น) กี่แถว",
+      "หลังลบแถวรหัสซ้ำ (ข้อ 2) และลบแถวที่อายุ = 555 แล้ว เหลือข้อมูลกี่แถว",
+      "ค่ามัธยฐาน (MEDIAN) ของ “ค่าบริการต่อเดือน” จากแถวที่เหลือในข้อ 6 (ไม่นับช่องว่าง) — คือค่าที่ใช้เติมช่องว่าง",
+      "มีสมาชิกเพียงรายเดียวที่รหัสขึ้นต้นด้วย “M9” — หลังแปลง “ยอดชำระสะสม” เป็นตัวเลข (นำจุลภาคออก) สมาชิกรายนี้มียอดชำระสะสมเท่าไร (คำตอบข้อนี้ได้จากไฟล์ของตนเองเท่านั้น)"
+    ],
+    steps: [
+      "กดปุ่มด้านล่างเพื่อดาวน์โหลด<b>ไฟล์ข้อมูลของคุณ</b> (ชื่อไฟล์ = รหัสนักศึกษา) <b>ห้ามเปลี่ยนชื่อไฟล์</b> แล้วเปิดใน Excel",
+      "ตอบข้อ 1, 3, 4, 5 จากไฟล์ดิบก่อนแก้ไขใด ๆ (COUNTIF / COUNTBLANK / ตัวกรอง)",
+      "ลบแถวรหัสสมาชิกซ้ำ เก็บแถวบนสุดไว้ (Remove Duplicates) → ตอบข้อ 2",
+      "ลบแถวที่อายุ = 555 → ตอบข้อ 6",
+      "หาค่ามัธยฐานของค่าบริการต่อเดือน → ตอบข้อ 7 แล้วเติมช่องว่างทุกช่องด้วยค่านี้",
+      "รวมการสะกดจังหวัดอยุธยาให้เป็น “พระนครศรีอยุธยา” แบบเดียว (แก้ “อยุธยา” และ “อยุธยาฯ”)",
+      "แปลงยอดชำระสะสมเป็นตัวเลขทั้งหมด (นำจุลภาคออก) → ตอบข้อ 8",
+      "บันทึก CSV UTF-8 ชื่อเดิม โหลดเข้า Model Builder (Label = ต่ออายุสมาชิก) จับภาพหน้าจอขั้น Data ให้เห็นชื่อไฟล์และนาฬิกา — อัปโหลด CSV + ภาพหน้าจอเข้า LMS พร้อมไฟล์คำตอบ"
+    ]
+  },
+
+  q2: {
+    name: "Quiz #2 — อัลกอริทึมจำแนกประเภท (สป.4–7)",
+    count: 8,
+    header: ["รหัสผู้กู้","อายุ","รายได้ต่อเดือน","วงเงินกู้","งวดค้างจ่ายปีที่แล้ว","ค่าจริง_ผิดนัด","โมเดลA_ทำนาย","โมเดลB_ทำนาย"],
+    intro: "ธนาคารทดสอบโมเดลทำนาย “การผิดนัดชำระสินเชื่อ” 2 ตัว (A และ B) กับข้อมูลผู้กู้ชุดหนึ่ง คุณได้รับไฟล์ผลทำนายมาวิเคราะห์ · สร้างคอลัมน์ช่วย (helper column) ได้ตามต้องการ",
+    make: q2_make,
+    questions: [
+      "ไฟล์มีข้อมูลผู้กู้ทั้งหมดกี่ราย (ไม่รวมหัวตาราง)",
+      "ใช้กติกาต้นไม้ตัดสินใจ: “ถ้า งวดค้างจ่ายปีที่แล้ว ≥ 4 และ รายได้ต่อเดือน < 25,000 → ทำนาย Yes มิฉะนั้น No” — มีผู้กู้ถูกจำแนกเป็น Yes กี่ราย (COUNTIFS)",
+      "กติกาต้นไม้ในข้อ 2 ทำนายตรงกับ “ค่าจริง_ผิดนัด” กี่ราย (สร้างคอลัมน์ช่วยคำทำนายของกติกา แล้วนับแถวที่ตรงกับค่าจริง)",
+      "โมเดล A ทำนายตรงกับค่าจริงกี่ราย",
+      "โมเดล B ทำนายตรงกับค่าจริงกี่ราย",
+      "Accuracy ของโมเดลที่ทำนายถูกมากกว่า คิดเป็นกี่เปอร์เซ็นต์ (= จำนวนที่ถูก ÷ จำนวนผู้กู้ทั้งหมด × 100 ปัดทศนิยม 2 ตำแหน่ง)",
+      "คะแนนความเสี่ยงแบบ Perceptron: คะแนน = (10 × งวดค้างจ่ายปีที่แล้ว) + (วงเงินกู้ ÷ 1,000) − 30 — ผู้กู้แถวบนสุดของไฟล์ (แถวที่ 2 ของตาราง) มีคะแนนเท่าไร (ตอบทศนิยมตามที่คำนวณได้ อย่างน้อย 2 ตำแหน่ง)",
+      "มีผู้กู้เพียงรายเดียวที่รหัสขึ้นต้นด้วย “L9” — คะแนนความเสี่ยงตามสูตรข้อ 7 ของผู้กู้รายนี้เท่าไร (ตอบทศนิยมอย่างน้อย 2 ตำแหน่ง · คำตอบข้อนี้ได้จากไฟล์ของตนเองเท่านั้น)"
+    ],
+    steps: [
+      "ดาวน์โหลด<b>ไฟล์ข้อมูลของคุณ</b> (ชื่อไฟล์ = รหัสนักศึกษา) <b>ห้ามเปลี่ยนชื่อไฟล์</b> แล้วเปิดใน Excel",
+      "ข้อ 1–2 นับจากข้อมูลโดยตรงด้วย COUNTA / COUNTIFS",
+      "ข้อ 3–5 แนะนำให้สร้างคอลัมน์ช่วย เช่น =IF(เงื่อนไข,\"Yes\",\"No\") แล้วนับแถวที่คำทำนายตรงกับค่าจริง",
+      "ข้อ 6 คำนวณ Accuracy เป็นเปอร์เซ็นต์ ปัดทศนิยม 2 ตำแหน่ง",
+      "ข้อ 7–8 คำนวณคะแนนตามสูตรที่ให้ (÷ คือการหารปกติ)",
+      "ทำเสร็จบันทึกไฟล์ Excel ของคุณ แล้วอัปโหลดเข้า LMS เป็นหลักฐานพร้อมไฟล์คำตอบ"
+    ]
+  },
+
+  q3: {
+    name: "Quiz #3 — GA และ Deep Learning (สป.10–11)",
+    count: 8,
+    header: ["รหัสการทดลอง","รุ่นที่","จำนวนโหนดชั้นซ่อน","อัตราการเรียนรู้","Accuracy(%)","เวลาเทรน(วินาที)"],
+    intro: "ทีมของคุณใช้อัลกอริทึมเชิงพันธุกรรม (GA) ค้นหาพารามิเตอร์ที่ดีที่สุดของโมเดลจำแนกภาพสินค้า ผ่านการวิวัฒนาการ 10 รุ่น ไฟล์นี้คือบันทึกผลทุกการทดลอง · สร้างคอลัมน์ช่วยได้ตามต้องการ",
+    make: q3_make,
+    questions: [
+      "ไฟล์มีบันทึกการทดลองทั้งหมดกี่รายการ (ไม่รวมหัวตาราง)",
+      "ค่า Accuracy(%) สูงสุดในไฟล์คือเท่าไร (MAX)",
+      "มีการทดลองที่ Accuracy(%) ≥ 85 กี่รายการ (COUNTIF)",
+      "ค่าความเหมาะสม (fitness) = Accuracy(%) − (0.05 × เวลาเทรน) — สร้างคอลัมน์ fitness ของทุกแถว แล้วตอบว่าค่า fitness สูงสุดคือเท่าไร",
+      "รุ่นที่ (generation) ใดมีค่าเฉลี่ย Accuracy(%) สูงที่สุด (ใช้ AVERAGEIF ทีละรุ่น) — ตอบเป็นหมายเลขรุ่น",
+      "ค่าเฉลี่ย Accuracy(%) ของรุ่นที่ 10 สูงกว่ารุ่นที่ 1 อยู่กี่จุด (นำมาลบกัน ปัดทศนิยม 2 ตำแหน่ง — นี่คือผลของการวิวัฒนาการแบบ GA)",
+      "การทดลองที่มี fitness สูงสุด (ข้อ 4) ใช้โหนดชั้นซ่อน H โหนด — โครงข่าย MLP รับ input 6 ตัว มีชั้นซ่อน 1 ชั้น (H โหนด) และ output 1 โหนด จะมีน้ำหนักและไบแอสรวมกี่ตัว จากสูตร (6 × H) + H + (H × 1) + 1",
+      "มีการทดลองเพียงรายการเดียวที่รหัสขึ้นต้นด้วย “E9” — ค่า fitness ตามสูตรข้อ 4 ของการทดลองนี้คือเท่าไร (คำตอบข้อนี้ได้จากไฟล์ของตนเองเท่านั้น)"
+    ],
+    steps: [
+      "ดาวน์โหลด<b>ไฟล์ข้อมูลของคุณ</b> (ชื่อไฟล์ = รหัสนักศึกษา) <b>ห้ามเปลี่ยนชื่อไฟล์</b> แล้วเปิดใน Excel",
+      "ข้อ 1–3 ใช้ COUNTA / MAX / COUNTIF จากข้อมูลโดยตรง",
+      "ข้อ 4 สร้างคอลัมน์ fitness ตามสูตร แล้วหา MAX · ข้อ 8 ใช้คอลัมน์เดียวกัน",
+      "ข้อ 5–6 ใช้ AVERAGEIF แยกตามคอลัมน์ “รุ่นที่”",
+      "ข้อ 7 นำจำนวนโหนดชั้นซ่อนของแถวที่ fitness สูงสุด มาแทนในสูตรที่ให้",
+      "ทำเสร็จบันทึกไฟล์ Excel ของคุณ แล้วอัปโหลดเข้า LMS เป็นหลักฐานพร้อมไฟล์คำตอบ"
+    ]
+  },
+
+  q4: {
+    name: "Quiz #4 — การนำ AI ไปใช้ในธุรกิจ (สป.12–15)",
+    count: 6,
+    header: ["รหัสผู้ทดสอบ","กลุ่ม","อายุ","Q1","Q2","Q3","Q4","Q5","Q6","Q7","Q8","Q9","Q10","เวลาทำภารกิจ(วินาที)"],
+    intro: "กลุ่มของคุณนำระบบต้นแบบแอปดูแลผู้สูงอายุไปทดสอบ Usability กับผู้ใช้จริง 2 กลุ่ม (ผู้สูงอายุ / ผู้ดูแล) ด้วยแบบสอบถาม SUS 10 ข้อ (คะแนน 1–5) และจับเวลาทำภารกิจ ไฟล์นี้คือผลการทดสอบ",
+    make: q4_make,
+    questions: [
+      "มีผู้ทดสอบทั้งหมดกี่คน (ไม่รวมหัวตาราง)",
+      "คะแนน SUS ของผู้ทดสอบแถวบนสุดของไฟล์ (แถวที่ 2 ของตาราง) คือเท่าไร — สูตร SUS: ข้อคี่ (Q1,Q3,Q5,Q7,Q9) ใช้ (คะแนน − 1) · ข้อคู่ (Q2,Q4,Q6,Q8,Q10) ใช้ (5 − คะแนน) · รวมทั้ง 10 ค่าแล้วคูณ 2.5",
+      "คำนวณ SUS ของผู้ทดสอบทุกคน (ลากสูตร) — มีผู้ทดสอบกี่คนที่ได้ SUS ≥ 68 (เกณฑ์ค่าเฉลี่ยอุตสาหกรรม)",
+      "ค่าเฉลี่ยของ “เวลาทำภารกิจ(วินาที)” เฉพาะกลุ่ม “ผู้สูงอายุ” คือเท่าไร (AVERAGEIF ปัดทศนิยม 2 ตำแหน่ง)",
+      "ฝ่ายบริหารประเมินว่าเมื่อนำระบบไปใช้จริง ผู้ใช้กลุ่ม “ผู้ดูแล” แต่ละคนจะประหยัดเวลางานได้ 15 นาที/วัน คิดค่าแรงนาทีละ 1 บาท — จากจำนวนผู้ดูแลในไฟล์นี้ ระบบสร้างมูลค่ารวมกี่บาทต่อวัน (= จำนวนผู้ดูแล × 15)",
+      "มีผู้ทดสอบเพียงรายเดียวที่รหัสขึ้นต้นด้วย “U9” — เวลาทำภารกิจ(วินาที) ของผู้ทดสอบรายนี้คือเท่าไร (คำตอบข้อนี้ได้จากไฟล์ของตนเองเท่านั้น)"
+    ],
+    steps: [
+      "ดาวน์โหลด<b>ไฟล์ข้อมูลของคุณ</b> (ชื่อไฟล์ = รหัสนักศึกษา) <b>ห้ามเปลี่ยนชื่อไฟล์</b> แล้วเปิดใน Excel",
+      "ข้อ 2–3 สร้างคอลัมน์ SUS ตามสูตรที่ให้ แล้วลากสูตรครบทุกแถว",
+      "ข้อ 4 ใช้ AVERAGEIF ตามคอลัมน์ “กลุ่ม” · ข้อ 5 นับกลุ่มผู้ดูแลด้วย COUNTIF",
+      "ทำเสร็จบันทึกไฟล์ Excel ของคุณ แล้วอัปโหลดเข้า LMS เป็นหลักฐานพร้อมไฟล์คำตอบ"
+    ]
+  }
+};
+
+/* ---------- แปลงเป็นข้อความ CSV (มี BOM เปิดใน Excel ภาษาไทยไม่เพี้ยน) ---------- */
+function rowsToCsv(header, rows) {
+  const esc = (v) => { const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const lines = [header.map(esc).join(",")];
+  for (const r of rows) lines.push(r.map(esc).join(","));
+  return "\uFEFF" + lines.join("\r\n") + "\r\n";
+}
+
+/* ---------- hash / checksum / รหัสยืนยัน ---------- */
+function cyrb53(str, seed) {
+  let h1 = 0xdeadbeef ^ (seed || 0), h2 = 0x41c6ce57 ^ (seed || 0);
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+const QZ_SALT = "RUS-QUIZ-2569-v1";
+function payloadChecksum(payloadStr) { return cyrb53(payloadStr, 2569) + "-" + cyrb53(QZ_SALT + payloadStr, 41); }
+function verifyCode(checksum) {
+  const n = parseInt(cyrb53(checksum, 7).slice(0, 8), 36) % 1000000;
+  return String(n).padStart(6, "0");
+}
+
+/* ---------- สลับลำดับข้อ/ตัวเลือกตามเลขเครื่อง (การแสดงผลเท่านั้น) ---------- */
+function shuffledOrder(machineNo, count, tag) {
+  const rng = makeRng(seedFromId("M" + machineNo + "#" + tag) ^ 0x9e3779b9);
+  return shuffleInPlace(rng, Array.from({ length: count }, (_, i) => i));
+}
+
+if (typeof module !== "undefined") {
+  module.exports = { seedFromId, makeRng, randint, choice, sample, shuffleInPlace,
+    QSETS, rowsToCsv, cyrb53, payloadChecksum, verifyCode, shuffledOrder };
+}
+</script>
+<script id="cfg" type="application/json">{"courseCode":"306-32-06","courseName":"ปัญญาประดิษฐ์เพื่องานธุรกิจ","quizTitle":"Quiz #1 — สัปดาห์ที่ 4 (เนื้อหาสัปดาห์ 1–3: การเตรียมข้อมูล)","section":"ISD36741N","durationMin":120,"allowedTools":"Excel/Google Sheets, ML.NET Model Builder และหน้า LMS","theoryPoint":0.5,"practicalPoint":3,"totalPoints":30,"includePractical":true,"practicalSet":"q1","theory":[{"q":"ร้านกาแฟแห่งหนึ่งใช้ระบบที่ \"เรียนรู้จากประวัติการขายย้อนหลัง เพื่อทำนายปริมาณวัตถุดิบที่ควรสั่งในสัปดาห์หน้า\" ข้อใดอธิบายระบบนี้ได้ถูกต้องที่สุด","choices":["เป็น AI แต่ไม่เกี่ยวกับ Machine Learning เพราะไม่มีหุ่นยนต์","เป็นการใช้ Machine Learning ซึ่งเป็นวิธีการหนึ่งภายใต้ร่มของ AI","เป็น Deep Learning เสมอ เพราะมีการทำนาย","ไม่ถือเป็น AI เพราะทำงานกับตัวเลขเท่านั้น"]},{"q":"โรงพยาบาลมีประวัติผู้ป่วย 3,000 ราย ซึ่งระบุไว้แล้วทุกรายว่า \"กลับมารักษาซ้ำภายใน 30 วัน / ไม่กลับมา\" ต้องการสร้างโมเดลทำนายผู้ป่วยรายใหม่ ข้อมูลลักษณะนี้เหมาะกับการเรียนรู้ประเภทใด","choices":["Supervised Learning เพราะมีป้ายคำตอบ (label) กำกับอยู่แล้ว","Unsupervised Learning เพราะข้อมูลเป็นความลับ","Reinforcement Learning เพราะผู้ป่วยกลับมาซ้ำ","ใช้ ML ไม่ได้เพราะเป็นข้อมูลสุขภาพ"]},{"q":"เชนร้านอาหารมีประวัติการสั่งอาหารของสมาชิกจำนวนมาก แต่ไม่มีป้ายคำตอบใด ๆ อยากให้ระบบ \"จับกลุ่มสมาชิกที่พฤติกรรมการสั่งคล้ายกัน\" เพื่อออกโปรโมชันแยกกลุ่ม ควรใช้เทคนิคใด","choices":["Classification","Regression","Clustering (Unsupervised Learning)","Reinforcement Learning"]},{"q":"บริษัทขนส่งพัฒนาระบบที่ทดลองเลือกเส้นทางส่งของด้วยตนเอง โดยได้ \"คะแนนบวก\" เมื่อส่งทันเวลา และถูก \"หักคะแนน\" เมื่อส่งช้า ระบบค่อย ๆ เลือกเส้นทางเก่งขึ้นเอง นี่คือการเรียนรู้ประเภทใด","choices":["Supervised Learning","Unsupervised Learning","Semi-supervised Learning","Reinforcement Learning"]},{"q":"ผู้จัดการโรงแรมต้องการทำนาย \"จำนวนห้องที่จะมีผู้เข้าพักในคืนพรุ่งนี้\" เป็นตัวเลข ใน ML.NET Model Builder ควรเลือก scenario ใด","choices":["Data classification","Value prediction","Image classification","Recommendation"]},{"q":"ธนาคารต้องการทำนายว่าใบสมัครสินเชื่อแต่ละใบควรได้ผลลัพธ์ \"อนุมัติ\" หรือ \"ไม่อนุมัติ\" ใน ML.NET Model Builder ควรเลือก scenario ใด","choices":["Value prediction","Recommendation","Data classification","Image classification"]},{"q":"ทีม ก ใช้อัลกอริทึมพื้นฐานกับข้อมูลที่ตรวจสอบความถูกต้องมาอย่างดี ส่วนทีม ข ใช้อัลกอริทึมล้ำสมัยกับข้อมูลที่กรอกผิดจำนวนมาก ผลปรากฏว่าโมเดลทีม ก แม่นยำกว่ามาก ผลลัพธ์นี้สอดคล้องกับหลักการใด","choices":["โมเดลยิ่งใหม่ยิ่งแม่น","ข้อมูลยิ่งน้อยยิ่งเร็ว","อัลกอริทึมสำคัญกว่าข้อมูลเสมอ","คุณภาพของข้อมูลเป็นตัวกำหนดคุณภาพผลลัพธ์ของโมเดล"]},{"q":"ตารางข้อมูลน้ำหนักพัสดุ 400 แถว พบว่าคอลัมน์ \"น้ำหนัก (กก.)\" มีค่าว่างเพียง 9 ช่อง วิธีจัดการที่เหมาะสมที่สุดคือข้อใด","choices":["ลบคอลัมน์น้ำหนักทิ้งทั้งคอลัมน์","ปล่อยว่างไว้ Model Builder จะเดาเอง","เติมช่องว่างด้วยค่ากลางของข้อมูล เช่น ค่ามัธยฐาน","แทนทุกช่องว่างด้วย 0 เสมอ"]},{"q":"ในข้อมูลการจองคิวร้านตัดผม พบแถวหนึ่งมี \"ระยะเวลารอคิว = 4,800 นาที\" ขณะที่แถวอื่น ๆ อยู่ระหว่าง 5–90 นาที ค่านี้จัดเป็นปัญหาคุณภาพข้อมูลแบบใด","choices":["ค่าผิดปกติ (Outlier)","ข้อมูลซ้ำ (Duplicate)","ค่าว่าง (Missing value)","รูปแบบไม่สม่ำเสมอ (Format)"]},{"q":"จะฝึกโมเดลทำนายว่า \"ผู้เช่าจะต่อสัญญาหรือไม่\" จากตาราง: หมายเลขสัญญา, ชื่อผู้เช่า, อายุ, ค่าเช่าต่อเดือน, จำนวนปีที่เช่ามาแล้ว, ต่อสัญญา(Yes/No) — คอลัมน์ใดควรตัดออกก่อนนำเข้าฝึกโมเดล","choices":["อายุ และค่าเช่าต่อเดือน","หมายเลขสัญญา และชื่อผู้เช่า","จำนวนปีที่เช่ามาแล้ว","ต่อสัญญา (Yes/No)"]},{"q":"คอลัมน์ \"เงินเดือน\" ในไฟล์ถูกบันทึกเป็นข้อความ \"37,500\" (มีจุลภาคคั่น) เมื่อโหลดเข้า Model Builder ระบบจะตรวจจับคอลัมน์นี้เป็นชนิดใด และส่งผลอย่างไร","choices":["ตัวเลข (Single) — ใช้คำนวณได้ปกติ","วันที่ (DateTime) — ต้องแปลงรูปแบบวันที่","Boolean — ใช้เป็น Label ได้เลย","ข้อความ (String) — นำไปคำนวณเชิงตัวเลขไม่ได้จนกว่าจะนำจุลภาคออก"]},{"q":"นักศึกษาบันทึกข้อมูลเป็นไฟล์ .xlsx ที่มีหัวตารางผสานเซลล์ 2 ชั้น และมีแถว \"รวมทั้งสิ้น\" ปิดท้ายตาราง เมื่อจะนำเข้า Model Builder ควรแก้ไขอย่างไร","choices":["แปลงเป็น CSV UTF-8 ให้หัวตารางเหลือแถวเดียว และลบแถวสรุปผลรวมออก","ผสานเซลล์เพิ่มให้สวยงามก่อน","บันทึกเป็น .pdf เพื่อคงรูปแบบเดิม","ใส่สีพื้นหลังหัวตารางให้ชัดเจนขึ้น"]}],"roster":[{"no":1,"sid":"367329241001","name":"นายกรวิชญ์ เชี่ยวชาญ","machine":1},{"no":2,"sid":"367329241002","name":"นายกันตพงศ์ พูลสวัสดิ์","machine":2},{"no":3,"sid":"367329241003","name":"นายจุฑาวัฒน์ ศรีศักดา","machine":3},{"no":4,"sid":"367329241004","name":"นางสาวชุติมณฑน์ เธียรภักดีกุล","machine":4},{"no":5,"sid":"367329241009","name":"นางสาวปวริศา เสือใจหาญ","machine":5},{"no":6,"sid":"367329241012","name":"นางสาวรัญชนา วรรณพัฒน์","machine":6},{"no":7,"sid":"367329241013","name":"นายเริงวัจน์ สิทธิโชควทันย์","machine":7},{"no":8,"sid":"367329241016","name":"นายสรวิชญ์ ยาเพ็ชรน้อย","machine":8},{"no":9,"sid":"367329241018","name":"นางสาวอภิจารวี นุ่มดี","machine":9},{"no":10,"sid":"367329241020","name":"นายอานุภาพ เรือนใจมั่น","machine":10},{"no":11,"sid":"367329241021","name":"นายเสฎฐวุฒิ ปานฑสูตร","machine":11},{"no":12,"sid":"367329241022","name":"นายปฏิพล ท้วมพงษ์","machine":12}]}</script>
+<script>
+"use strict";
+const CFG = JSON.parse(document.getElementById("cfg").textContent);
+const $ = (id) => document.getElementById(id);
+const screens = ["scrEntry","scrIdentity","scrRules","scrExam","scrDone"];
+function show(id){ for(const s of screens) $(s).classList.toggle("hidden", s!==id); window.scrollTo(0,0); }
+
+/* ---------- สถานะ ---------- */
+let student = null;          // {no, sid, name, machine}
+let startTs = null, submitted = false, blurCount = 0, hiddenMs = 0, hiddenSince = null;
+let timerH = null, savedFile = null;
+const theoryAns = {};        // เลขข้อเดิม -> อักษรตัวเลือกเดิม (ก-ง)
+const practAns  = {};        // "1".."8" -> ข้อความที่พิมพ์
+const LETTERS = ["ก","ข","ค","ง"];
+const storeKey = () => "qz_" + CFG.courseCode + "_" + CFG.section + "_" + (student ? student.sid : "");
+
+/* ---------- หัวเรื่อง ---------- */
+const meta = CFG.courseCode + " " + CFG.courseName + " · กลุ่ม " + CFG.section +
+             " · เวลา " + CFG.durationMin + " นาที · " + CFG.totalPoints + " คะแนน";
+$("hdCourse1").textContent = CFG.courseCode; $("hdCourse2").textContent = CFG.courseCode;
+$("hdQuiz1").textContent = CFG.quizTitle;    $("hdQuiz2").textContent = CFG.quizTitle;
+$("hdMeta1").textContent = meta;
+$("ruleDur").textContent = CFG.durationMin;
+if (CFG.allowedTools) $("ruleAllowed").textContent = CFG.allowedTools; else $("ruleAllowedLi").remove();
+document.title = CFG.quizTitle + " · " + CFG.courseCode;
+
+/* ---------- จอ 1: เลขเครื่อง ---------- */
+function findByMachine(m){ return CFG.roster.find(r => Number(r.machine) === Number(m)); }
+function tryMachine(){
+  const m = $("inMachine").value.trim();
+  if(!/^\d{1,3}$/.test(m)){ $("entryErr").textContent = "พิมพ์เป็นตัวเลขเลขเครื่อง เช่น 7"; return; }
+  const r = findByMachine(m);
+  if(!r){ $("entryErr").textContent = "ไม่พบเลขเครื่อง " + m + " ในผังที่นั่ง — เช็คป้ายบนเครื่องอีกครั้ง หรือยกมือเรียกอาจารย์"; return; }
+  $("entryErr").textContent = "";
+  student = { no:r.no, sid:r.sid, name:r.name, machine:Number(m) };
+  // เคยส่งแล้ว?
+  const saved = loadState();
+  if (saved && saved.submitted){ restoreDone(saved); return; }
+  $("idMachineNo").textContent = m; $("idSeatNo").textContent = r.no;
+  $("idName").textContent = r.name; $("idSid").textContent = "รหัสนักศึกษา " + r.sid;
+  show("scrIdentity");
+}
+$("btnMachine").addEventListener("click", tryMachine);
+$("inMachine").addEventListener("keydown", e => { if(e.key==="Enter") tryMachine(); });
+
+/* ---------- จอ 2: ยืนยันตัวตน ---------- */
+$("btnNotMe").addEventListener("click", () => { student=null; $("inMachine").value=""; show("scrEntry"); $("inMachine").focus(); });
+$("btnMe").addEventListener("click", () => {
+  const saved = loadState();
+  if (saved && saved.startTs && !saved.submitted){        // ทำค้างไว้ (เผลอรีเฟรช/ไฟดับ)
+    startTs = saved.startTs; blurCount = saved.blurCount||0; hiddenMs = saved.hiddenMs||0;
+    Object.assign(theoryAns, saved.theoryAns||{}); Object.assign(practAns, saved.practAns||{});
+    beginExam(true); return;
+  }
+  $("ruleWho").textContent = "เครื่อง " + student.machine + " · เลขที่ " + student.no + " · " + student.name + " (" + student.sid + ")";
+  show("scrRules");
+});
+
+/* ---------- จอ 3: กติกา ---------- */
+$("chkAgree").addEventListener("change", e => $("btnStart").disabled = !e.target.checked);
+$("btnStart").addEventListener("click", () => { startTs = Date.now(); saveState(); beginExam(false); });
+
+/* ---------- สร้างหน้าข้อสอบ ---------- */
+function buildTheory(){
+  const list = $("theoryList"); list.innerHTML = "";
+  const qOrder = shuffledOrder(student.machine, CFG.theory.length, "th");
+  qOrder.forEach((qi, disp) => {
+    const q = CFG.theory[qi];
+    const div = document.createElement("div"); div.className = "q";
+    const qt = document.createElement("div"); qt.className = "qt";
+    qt.textContent = "ข้อ " + (disp+1) + ". " + q.q; div.appendChild(qt);
+    const cOrder = shuffledOrder(student.machine, q.choices.length, "ch" + qi);
+    cOrder.forEach((ci, cdisp) => {
+      const lab = document.createElement("label"); lab.className = "choice";
+      const rb = document.createElement("input");
+      rb.type = "radio"; rb.name = "T" + qi; rb.value = LETTERS[ci];
+      if (theoryAns[String(qi+1)] === LETTERS[ci]) rb.checked = true;
+      rb.addEventListener("change", () => { theoryAns[String(qi+1)] = LETTERS[ci]; saveState(); updateProg(); });
+      const sp = document.createElement("span");
+      sp.textContent = LETTERS[cdisp] + ". " + q.choices[ci];
+      lab.appendChild(rb); lab.appendChild(sp); div.appendChild(lab);
+    });
+    list.appendChild(div);
+  });
+}
+const PSET = CFG.includePractical ? QSETS[CFG.practicalSet] : null;
+const PCOUNT = PSET ? PSET.count : 0;
+function buildPractical(){
+  if(!PSET){ $("practicalCard").classList.add("hidden"); return; }
+  $("practIntro").textContent = PSET.intro;
+  $("practSteps").innerHTML = PSET.steps.map(s => "<li>" + s + "</li>").join("");
+  const list = $("practList"); list.innerHTML = "";
+  PSET.questions.forEach((txt, i) => {
+    const n = String(i+1);
+    const div = document.createElement("div"); div.className = "q";
+    const qt = document.createElement("div"); qt.className = "qt";
+    qt.textContent = "ข้อ " + n + ". (" + CFG.practicalPoint + " คะแนน) " + txt; div.appendChild(qt);
+    const line = document.createElement("div"); line.className = "ansline";
+    const inp = document.createElement("input");
+    inp.type = "text"; inp.inputMode = "decimal"; inp.autocomplete = "off";
+    inp.placeholder = "คำตอบ (ตัวเลข)"; inp.setAttribute("aria-label","คำตอบข้อ " + n);
+    if (practAns[n]) inp.value = practAns[n];
+    const ok = document.createElement("span"); ok.className = "done" + (practAns[n] ? " show":""); ok.textContent = "✓ บันทึกแล้ว";
+    inp.addEventListener("input", () => { practAns[n] = inp.value.trim(); ok.classList.toggle("show", !!practAns[n]); saveState(); updateProg(); });
+    line.appendChild(inp); line.appendChild(ok); div.appendChild(line);
+    list.appendChild(div);
+  });
+}
+function beginExam(resumed){
+  $("theoryHead").textContent = "ส่วนที่ 1 · ภาคทฤษฎี (" + CFG.theory.length + " ข้อ ข้อละ " + CFG.theoryPoint + " คะแนน)";
+  if (PSET) $("practHead").textContent = "ส่วนที่ 2 · ภาคปฏิบัติ (" + PCOUNT + " ข้อ ข้อละ " + CFG.practicalPoint + " คะแนน)";
+  $("examWho").textContent = "เครื่อง " + student.machine + " · " + student.name + " (" + student.sid + ")";
+  $("csvNote").textContent = "ไฟล์ชื่อ " + student.sid + ".csv — ดาวน์โหลดกี่ครั้งก็ได้ ข้อมูลเหมือนเดิมเสมอ";
+  buildTheory(); buildPractical(); updateProg();
+  show("scrExam");
+  $("resumeNote").classList.toggle("hidden", !resumed);
+  tick(); timerH = setInterval(tick, 1000);
+}
+
+/* ---------- นาฬิกา ---------- */
+function tick(){
+  const left = CFG.durationMin*60000 - (Date.now() - startTs);
+  if (left <= 0){ $("tmr").textContent = "00:00"; doSubmit(true); return; }
+  const s = Math.floor(left/1000), mm = Math.floor(s/60), ss = s%60;
+  const hh = Math.floor(mm/60);
+  $("tmr").textContent = (hh>0 ? hh + ":" + String(mm%60).padStart(2,"0") : String(mm)) + ":" + String(ss).padStart(2,"0");
+  $("tmr").classList.toggle("low", left < 10*60000);
+}
+
+/* ---------- ความคืบหน้า ---------- */
+function updateProg(){
+  const t = Object.keys(theoryAns).length, p = Object.keys(practAns).filter(k=>practAns[k]).length;
+  const total = CFG.theory.length + PCOUNT;
+  const done = t + p;
+  $("prog").textContent = "ตอบแล้ว " + done + "/" + total + " ข้อ";
+  $("sumState").textContent = done === total ? "ตอบครบทุกข้อแล้ว ✓" :
+    "ยังไม่ได้ตอบ " + (total - done) + " ข้อ (ส่งได้แม้ตอบไม่ครบ)";
+}
+
+/* ---------- ดาวน์โหลด CSV ข้อมูลของฉัน ---------- */
+$("btnCsv").addEventListener("click", () => {
+  const csv = rowsToCsv(PSET.header, PSET.make(String(student.sid)));
+  downloadBlob(new Blob([csv], {type:"text/csv;charset=utf-8"}), student.sid + ".csv");
+});
+function downloadBlob(blob, name){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+
+/* ---------- บันทึกกันเครื่องดับ/รีเฟรช ---------- */
+function saveState(extra){
+  try{
+    const st = Object.assign({ startTs, submitted, blurCount, hiddenMs, theoryAns, practAns }, extra||{});
+    localStorage.setItem(storeKey(), JSON.stringify(st));
+  }catch(e){}
+}
+function loadState(){
+  try{ const s = localStorage.getItem(storeKey()); return s ? JSON.parse(s) : null; }catch(e){ return null; }
+}
+
+/* ---------- บันทึกการออกนอกหน้าจอ ---------- */
+document.addEventListener("visibilitychange", () => {
+  if (!startTs || submitted) return;
+  if (document.hidden){ blurCount++; hiddenSince = Date.now(); }
+  else if (hiddenSince){ hiddenMs += Date.now() - hiddenSince; hiddenSince = null; }
+  saveState();
+});
+window.addEventListener("blur", () => { if(startTs && !submitted && !document.hidden){ blurCount++; saveState(); } });
+window.addEventListener("beforeunload", (e) => {
+  if (startTs && !submitted){ e.preventDefault(); e.returnValue = ""; }
+});
+
+/* ---------- ส่งข้อสอบ ---------- */
+$("btnSubmit").addEventListener("click", () => {
+  const total = CFG.theory.length + PCOUNT;
+  const done = Object.keys(theoryAns).length + Object.keys(practAns).filter(k=>practAns[k]).length;
+  $("modalMsg").textContent = done < total
+    ? "ยังตอบไม่ครบ (" + done + "/" + total + " ข้อ)\nยืนยันส่งข้อสอบเลยหรือไม่? ส่งแล้วแก้ไขไม่ได้"
+    : "ตอบครบ " + done + "/" + total + " ข้อ\nยืนยันส่งข้อสอบ? ส่งแล้วแก้ไขไม่ได้";
+  $("modal").classList.remove("hidden");
+  $("modalNo").focus();
+});
+$("modalNo").addEventListener("click", () => $("modal").classList.add("hidden"));
+$("modalYes").addEventListener("click", () => { $("modal").classList.add("hidden"); doSubmit(false); });
+function doSubmit(auto){
+  if (submitted) return;
+  submitted = true;
+  if (timerH) clearInterval(timerH);
+  if (hiddenSince){ hiddenMs += Date.now() - hiddenSince; hiddenSince = null; }
+  const payload = {
+    v: 1, quiz: CFG.quizTitle, courseCode: CFG.courseCode, section: CFG.section,
+    machine: student.machine, seatNo: student.no, sid: student.sid, name: student.name,
+    startedAt: new Date(startTs).toISOString(), submittedAt: new Date().toISOString(),
+    autoSubmitted: !!auto, blurCount, hiddenSec: Math.round(hiddenMs/1000),
+    theory: theoryAns, practical: PSET ? practAns : {}
+  };
+  const pstr = JSON.stringify(payload);
+  const checksum = payloadChecksum(pstr);
+  const file = JSON.stringify({ payload, checksum }, null, 1);
+  const code = verifyCode(checksum);
+  savedFile = { file, name: "M" + String(student.machine).padStart(2,"0") + "_" + student.sid + "_answers.json" };
+  saveState({ submitted:true, code, file: savedFile });
+  finishScreen(code, savedFile.name, auto);
+  downloadBlob(new Blob([savedFile.file], {type:"application/json"}), savedFile.name);
+}
+function finishScreen(code, fname, auto){
+  $("doneWho").textContent = "เครื่อง " + student.machine + " · " + student.name + " (" + student.sid + ")" + (auto ? " · หมดเวลา ระบบส่งให้อัตโนมัติ" : "");
+  $("doneCode").textContent = code;
+  $("doneFile").textContent = fname;
+  $("rawOut").value = savedFile ? savedFile.file : "";
+  show("scrDone");
+}
+function restoreDone(saved){
+  savedFile = saved.file || null;
+  finishScreen(saved.code || "------", savedFile ? savedFile.name : "-", false);
+}
+$("btnRedownload").addEventListener("click", () => {
+  if (savedFile){ $("doneErr").textContent = ""; downloadBlob(new Blob([savedFile.file], {type:"application/json"}), savedFile.name); }
+  else $("doneErr").textContent = "ไม่พบไฟล์ในเครื่องนี้ กรุณาแจ้งอาจารย์พร้อมรหัสยืนยัน";
+});
+
+$("inMachine").focus();
+</script>
+</body>
+</html>
